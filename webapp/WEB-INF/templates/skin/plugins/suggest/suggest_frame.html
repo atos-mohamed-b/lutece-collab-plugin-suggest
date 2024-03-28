@@ -13,12 +13,11 @@
 			</a>
 		</#if>
 		<#if view?has_content && view == "view_suggest_submit_list">
-			<h2>
-				${label_suggest}
-				<form class="form-inline pull-right" name="search" id="search" method="post" action="jsp/site/Portal.jsp?page=suggest">
+            <form class="form-inline pull-right" name="search" id="search" method="post" action="jsp/site/Portal.jsp?page=suggest">
 					<input name="action" value="view_suggest_submit_list" type="hidden">
 					<input name="id_suggest" value="${id_suggest}" type="hidden">
 					<input type="hidden" name="page" value="search">
+                    <h2>${label_suggest}</h2>
 					<div class="input-group">
 						<input type="text" class="form-control" name="query" id="query" placeholder="#i18n{suggest.suggestFrame.altSearch}" value="<#if query?exists>${query}</#if>">
 						<span class="input-group-btn">
@@ -33,7 +32,7 @@
 						</span>
 					</div>
 				</form>
-			</h2>
+
 		</#if>
 		<#if lutece_user_connected?? && user_subscribed??>
 			<span class="pull-right suggest-subscribe">
