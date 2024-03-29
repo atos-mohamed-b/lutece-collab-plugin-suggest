@@ -77,10 +77,10 @@ INSERT INTO suggest_suggest_category (id_suggest, id_category) VALUES
 
 DELETE FROM suggest_entry;
 INSERT INTO suggest_entry (id_entry, id_suggest, id_type, title, help_message, entry_comment, mandatory, pos, default_value, height, width, max_size_enter, show_in_suggest_submit_list) VALUES
-	(2, 1, 3, 'Description', '', '', 1, 2, '', 4, 80, 500, 1),
-	(1, 1, 2, 'Title', '', '', 1, 1, '', -1, 80, -1, 1),
-	(3, 2, 2, 'Title', '', '', 1, 3, '', -1, 100, -1, 1),
-	(4, 2, 3, 'Description', '', '', 1, 4, '', 4, 100, 500, 1);
+	(2, 1, 3, 'Description', '', '', 1, 1, '', 4, 80, 500, 1),
+	(1, 1, 2, 'Title', '', '', 1, 2, '', -1, 80, -1, 1),
+	(3, 2, 2, 'Title', '', '', 1, 4, '', -1, 100, -1, 1),
+	(4, 2, 3, 'Description', '', '', 1, 3, '', 4, 100, 500, 1);
 	
 	
 --
