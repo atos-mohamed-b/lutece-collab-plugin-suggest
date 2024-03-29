@@ -19,7 +19,22 @@
 					<input name="action" value="view_suggest_submit_list" type="hidden">
 					<input name="id_suggest" value="${id_suggest}" type="hidden">
 					<input type="hidden" name="page" value="search">
-                    <h2>${label_suggest}</h2>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-8">
+                            <h2>${label_suggest}</h2>
+                        </div>
+                        <div class="col-xs-12 col-sm-4">
+                            <#if view?has_content && view == "view_suggest_submit_list" >
+                                <a class="btn btn-block btn-lg btn-primary" href="jsp/site/Portal.jsp?page=suggest&id_suggest=${id_suggest}&action=create_suggest_submit" target="_top">
+                                    #i18n{suggest.suggestFrame.labelProposal}
+                                </a>
+                            <#else>
+                                <a class="btn btn-default btn-xs backlink" href="jsp/site/Portal.jsp?page=suggest&id_suggest=${id_suggest}&action=view_suggest_submit_list" target="_top">
+                                    <i class="fa fa-chevron-left"></i>  #i18n{suggest.suggestFrame.backToList}
+                                </a>
+                             </#if>
+                        </div>
+                    </div>
 					<div class="input-group">
 						<input type="text" class="form-control" name="query" id="query" placeholder="#i18n{suggest.suggestFrame.altSearch}" value="<#if query?exists>${query}</#if>">
 						<span class="input-group-btn">
@@ -106,19 +121,6 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-12">
                                 &nbsp;
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12 col-sm-offset-1 col-sm-10">
-                                <#if view?has_content && view == "view_suggest_submit_list" >
-                                        <a class="btn btn-block btn-lg btn-primary" href="jsp/site/Portal.jsp?page=suggest&id_suggest=${id_suggest}&action=create_suggest_submit" target="_top">
-                                                #i18n{suggest.suggestFrame.labelProposal}
-                                        </a>
-                                <#else>
-                                        <a class="btn btn-default btn-xs backlink" href="jsp/site/Portal.jsp?page=suggest&id_suggest=${id_suggest}&action=view_suggest_submit_list" target="_top">
-                                                <i class="fa fa-chevron-left"></i>  #i18n{suggest.suggestFrame.backToList}
-                                        </a>
-                                </#if>
                         </div>
                     </div>
                     
