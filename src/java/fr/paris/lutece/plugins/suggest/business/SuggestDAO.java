@@ -51,13 +51,13 @@ import fr.paris.lutece.util.sql.DAOUtil;
 public final class SuggestDAO implements ISuggestDAO
 {
     // Constants
-    private static final String SQL_COLS_UNAVAILABILITY_WORKGROUP = "unavailability_message,workgroup,";
+    private static final String SQL_COLS_UNAVAILABILITY_WORKGROUP_WORKFLOW = "unavailability_message,workgroup,id_workflow,";
     private static final String SQL_COLS_VOTE_TABLE = "id_vote_type,number_vote_required,number_day_required,active_suggest_submit_authentification, ";
     private static final String SQL_COLS_AUTHENTICATION = "active_vote_authentification,active_comment_authentification,disable_new_suggest_submit, ";
     private static final String SQL_COLS_COMMENTS = "authorized_comment, disable_new_comment ,id_mailing_list_suggest_submit, ";
     private static final String SQL_QUERY_NEW_PK = "SELECT max( id_suggest ) FROM suggest_suggest";
     private static final String SQL_QUERY_FIND_BY_PRIMARY_KEY = "SELECT id_suggest,title,"
-            + SQL_COLS_UNAVAILABILITY_WORKGROUP
+            + SQL_COLS_UNAVAILABILITY_WORKGROUP_WORKFLOW
             + SQL_COLS_VOTE_TABLE
             + SQL_COLS_AUTHENTICATION
             + SQL_COLS_COMMENTS
@@ -68,7 +68,7 @@ public final class SuggestDAO implements ISuggestDAO
             + "default_suggest,id_default_sort,notification_new_comment_sender,notification_new_comment_title,notification_new_comment_body,notification_new_suggest_submit_sender,notification_new_suggest_submit_title,notification_new_suggest_submit_body "
             + "FROM suggest_suggest WHERE id_suggest = ?";
     private static final String SQL_QUERY_INSERT = "INSERT INTO suggest_suggest ( id_suggest,title,"
-            + SQL_COLS_UNAVAILABILITY_WORKGROUP
+            + SQL_COLS_UNAVAILABILITY_WORKGROUP_WORKFLOW
             + SQL_COLS_VOTE_TABLE
             + SQL_COLS_AUTHENTICATION
             + SQL_COLS_COMMENTS
@@ -76,9 +76,9 @@ public final class SuggestDAO implements ISuggestDAO
             + "libelle_contribution,number_suggest_submit_in_top_score,number_suggest_submit_in_top_comment,limit_number_vote, "
             + "number_suggest_submit_caracters_shown,show_category_block,show_top_score_block,show_top_comment_block ,active_suggest_submit_paginator,number_suggest_submit_per_page,role,"
             + "enable_new_suggest_submit_mail,header,sort_field,code_theme,confirmation_message,active_editor_bbcode,default_suggest,id_default_sort,notification_new_comment_sender,notification_new_comment_title,notification_new_comment_body,notification_new_suggest_submit_sender,notification_new_suggest_submit_title,notification_new_suggest_submit_body)"
-            + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String SQL_QUERY_DELETE = "DELETE FROM suggest_suggest WHERE id_suggest = ? ";
-    private static final String SQL_QUERY_UPDATE = "UPDATE suggest_suggest SET  id_suggest=?,title=?," + "unavailability_message=?,workgroup=?,"
+    private static final String SQL_QUERY_UPDATE = "UPDATE suggest_suggest SET  id_suggest=?,title=?," + "unavailability_message=?,workgroup=?,id_workflow=?,"
             + "id_vote_type=?,number_vote_required=?,number_day_required=?,active_suggest_submit_authentification=?, "
             + "active_vote_authentification=?,active_comment_authentification=?,disable_new_suggest_submit=?, "
             + "authorized_comment=?, disable_new_comment=? ,id_mailing_list_suggest_submit=?, "
@@ -91,7 +91,7 @@ public final class SuggestDAO implements ISuggestDAO
             + "notification_new_comment_body=?,notification_new_suggest_submit_sender=?,notification_new_suggest_submit_title=?"
             + ",notification_new_suggest_submit_body=? " + "WHERE id_suggest=?";
     private static final String SQL_QUERY_SELECT_SUGGEST_BY_FILTER = "SELECT id_suggest,title,"
-            + SQL_COLS_UNAVAILABILITY_WORKGROUP
+            + SQL_COLS_UNAVAILABILITY_WORKGROUP_WORKFLOW
             + SQL_COLS_VOTE_TABLE
             + SQL_COLS_AUTHENTICATION
             + SQL_COLS_COMMENTS
@@ -150,6 +150,7 @@ public final class SuggestDAO implements ISuggestDAO
             daoUtil.setString( ncpt++, suggest.getTitle( ) );
             daoUtil.setString( ncpt++, suggest.getUnavailabilityMessage( ) );
             daoUtil.setString( ncpt++, suggest.getWorkgroup( ) );
+            daoUtil.setInt( ncpt++, suggest.getIdWorkflow( ) );
             daoUtil.setInt( ncpt++, suggest.getVoteType( ).getIdVoteType( ) );
             daoUtil.setInt( ncpt++, suggest.getNumberVoteRequired( ) );
             daoUtil.setInt( ncpt++, suggest.getNumberDayRequired( ) );
@@ -224,6 +225,7 @@ public final class SuggestDAO implements ISuggestDAO
                 suggest.setTitle( daoUtil.getString( nIndex++ ) );
                 suggest.setUnavailabilityMessage( daoUtil.getString( nIndex++ ) );
                 suggest.setWorkgroup( daoUtil.getString( nIndex++ ) );
+                suggest.setIdWorkflow( daoUtil.getInt( nIndex++ ) );
 
                 voteType = new VoteType( );
                 voteType.setIdVoteType( daoUtil.getInt( nIndex++ ) );
@@ -311,6 +313,7 @@ public final class SuggestDAO implements ISuggestDAO
             daoUtil.setString( nIndex++, suggest.getTitle( ) );
             daoUtil.setString( nIndex++, suggest.getUnavailabilityMessage( ) );
             daoUtil.setString( nIndex++, suggest.getWorkgroup( ) );
+            daoUtil.setInt( nIndex++, suggest.getIdWorkflow( ) );
             daoUtil.setInt( nIndex++, suggest.getVoteType( ).getIdVoteType( ) );
             daoUtil.setInt( nIndex++, suggest.getNumberVoteRequired( ) );
             daoUtil.setInt( nIndex++, suggest.getNumberDayRequired( ) );
@@ -435,6 +438,7 @@ public final class SuggestDAO implements ISuggestDAO
                 suggest.setTitle( daoUtil.getString( ncpt++ ) );
                 suggest.setUnavailabilityMessage( daoUtil.getString( ncpt++ ) );
                 suggest.setWorkgroup( daoUtil.getString( ncpt++ ) );
+                suggest.setIdWorkflow( daoUtil.getInt( ncpt++ ) );
 
                 voteType = new VoteType( );
                 voteType.setIdVoteType( daoUtil.getInt( ncpt++ ) );

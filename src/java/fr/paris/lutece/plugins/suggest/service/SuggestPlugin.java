@@ -38,7 +38,9 @@ import java.io.Serializable;
 import javax.servlet.http.HttpServletRequest;
 
 import fr.paris.lutece.portal.business.style.Theme;
+import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation;
+import fr.paris.lutece.portal.service.plugin.PluginService;
 
 /**
  * class SuggestPlugin
@@ -73,4 +75,13 @@ public class SuggestPlugin extends PluginDefaultImplementation implements Serial
 
     }
 
+    /**
+     * Get the Plugin object associated with plugin-suggest
+     * 
+     * @return the Suggest Plugin
+     */
+    public static Plugin getPlugin( )
+    {
+        return PluginService.getPlugin( PLUGIN_NAME );
+    }
 }

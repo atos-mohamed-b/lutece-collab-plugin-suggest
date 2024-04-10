@@ -75,6 +75,7 @@ public class Suggest implements IExtendableResource, AdminWorkgroupResource, RBA
     private String _strTitle;
     private String _strUnavailabilityMessage;
     private String _strWorkgroup;
+    private int _nIdWorkflow = -1;
     private int _nIdMailingListSuggestSubmit;
     private int _nNumberVoteRequired = -1;
     private int _nNumberDayRequired = -1;
@@ -313,6 +314,26 @@ public class Suggest implements IExtendableResource, AdminWorkgroupResource, RBA
     public void setWorkgroup( String workGroup )
     {
         _strWorkgroup = workGroup;
+    }
+
+    /**
+     * Get the ID of the workflow associated to this suggest
+     * 
+     * @return the ID of the workflow
+     */
+    public int getIdWorkflow( )
+    {
+        return _nIdWorkflow;
+    }
+
+    /**
+     * Set the ID of the workflow associated to this suggest
+     * 
+     * @param idWorkflow
+     */
+    public void setIdWorkflow( int idWorkflow )
+    {
+        _nIdWorkflow = idWorkflow;
     }
 
     /**

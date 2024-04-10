@@ -143,6 +143,7 @@ CREATE TABLE suggest_suggest (
 	title long varchar,
 	unavailability_message long varchar,
 	workgroup varchar(255),
+	id_workflow INT DEFAULT NULL,
 	id_vote_type int default 0 NOT NULL,
 	number_vote_required int,
 	number_day_required int,

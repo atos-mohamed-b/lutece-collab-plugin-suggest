@@ -49,7 +49,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.suggest.business.Category;
 import fr.paris.lutece.plugins.suggest.business.CategoryHome;
 import fr.paris.lutece.plugins.suggest.business.CommentSubmit;
@@ -84,6 +86,7 @@ import fr.paris.lutece.plugins.suggest.service.CommentSubmitService;
 import fr.paris.lutece.plugins.suggest.service.DefaultMessageResourceIdService;
 import fr.paris.lutece.plugins.suggest.service.SuggestSubmitService;
 import fr.paris.lutece.plugins.suggest.service.SuggestResourceIdService;
+import fr.paris.lutece.plugins.suggest.service.SuggestService;
 import fr.paris.lutece.plugins.suggest.service.ExportFormatResourceIdService;
 import fr.paris.lutece.plugins.suggest.service.ICommentSubmitService;
 import fr.paris.lutece.plugins.suggest.service.ISuggestSubmitService;
@@ -93,6 +96,8 @@ import fr.paris.lutece.plugins.suggest.utils.SuggestIndexerUtils;
 import fr.paris.lutece.plugins.suggest.utils.SuggestUtils;
 import fr.paris.lutece.plugins.suggest.web.action.SuggestAdminSearchFields;
 import fr.paris.lutece.plugins.suggest.web.action.ISuggestAction;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
+import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
 import fr.paris.lutece.portal.business.indexeraction.IndexerAction;
 import fr.paris.lutece.portal.business.rbac.RBAC;
 import fr.paris.lutece.portal.business.role.RoleHome;
@@ -115,10 +120,12 @@ import fr.paris.lutece.portal.service.search.IndexationService;
 import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.security.SecurityService;
 import fr.paris.lutece.portal.service.security.UserNotSignedException;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.service.workflow.WorkflowService;
 import fr.paris.lutece.portal.service.workgroup.AdminWorkgroupService;
 import fr.paris.lutece.portal.web.admin.PluginAdminPageJspBean;
 import fr.paris.lutece.portal.web.pluginaction.DefaultPluginActionResult;
@@ -152,8 +159,10 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private static final String TEMPLATE_MODIFY_SUGGEST = "admin/plugins/suggest/modify_suggest.html";
     private static final String TEMPLATE_STATISTICS_SUGGEST = "admin/plugins/suggest/statistics.html";
     private static final String TEMPLATE_MANAGE_ADVANCED_PARAMETERS = "admin/plugins/suggest/manage_advanced_parameters.html";
+    private static final String TEMPLATE_TASK_FORM = "admin/plugins/suggest/task_form_workflow.html";
 
     // message
+    private static final String MESSAGE_ACTION_ERROR = "suggest.message.workflow.action.error";
     private static final String MESSAGE_NEW_COMMENT_SUBMIT_INVALID = "suggest.message.newCommentSubmitInvalid";
     private static final String MESSAGE_CONFIRM_REMOVE_SUGGEST = "suggest.message.confirmRemoveSuggest";
     private static final String MESSAGE_CONFIRM_REMOVE_SUGGEST_SUBMIT = "suggest.message.confirmRemoveSuggestSubmit";
@@ -217,6 +226,8 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private static final String PROPERTY_CREATE_SUGGEST_SUBMIT_PAGE_TITLE = "suggest.createSuggestSubmit.pageTitle";
     private static final String PROPERTY_MANAGE_COMMENT_SUBMIT_PAGE_TITLE = "suggest.manageCommentSubmit.pageTitle";
     private static final String PROPERTY_DEFAULT_ROLE_CODE = "defaultRole.code";
+    private static final String PROPERTY_PAGE_TITLE_TASKS_FORM_WORKFLOW = "suggest.taskFormWorkflow.pageTitle";
+
     // Markers
     private static final String MARK_WEBAPP_URL = "webapp_url";
     private static final String MARK_LOCALE = "locale";
@@ -297,6 +308,10 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private static final String MARK_SUGGEST_ACTIONS = "suggest_actions";
     private static final String MARK_ID_PARENT = "id_parent";
     private static final String MARK_PANEL = "panel";
+    private static final String MARK_WORKFLOW_REF_LIST = "workflow_list";
+    private static final String MARK_ID_SUGGEST_SUBMIT = "id_suggest_submit";
+    private static final String MARK_ID_ACTION = "id_action";
+    private static final String MARK_TASK_FORM = "task_form";
 
     // Jsp Definition
     private static final String JSP_DO_DISABLE_SUGGEST = "jsp/admin/plugins/suggest/DoDisableSuggest.jsp";
@@ -314,6 +329,7 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private static final String JSP_MANAGE_ADVANCED_PARAMETERS = "jsp/admin/plugins/suggest/ManageAdvancedParameters.jsp";
     private static final String JSP_DO_UPDATE_ALL_SUGGEST_SUBMIT = "jsp/admin/plugins/suggest/DoUpdateAllSuggestSubmit.jsp";
     private static final String JSP_DO_CHANGE_SUGGEST_SUBMIT_CATEGORY = "jsp/admin/plugins/suggest/DoMassChangeSuggestSubmitCategory.jsp";
+    private static final String JSP_WORKFLOW_TASK_FORM = "jsp/admin/plugins/suggest/DoGetWorkflowActionForm.jsp";
 
     // parameters form
     private static final String PARAMETER_ID_SUGGEST = "id_suggest";
@@ -406,6 +422,11 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private static final String PARAMETER_NOTIFICATION_NEW_SUGGEST_SUBMIT_SENDER_NAME = "notification_new_suggest_submit_sender_name";
     private static final String PARAMETER_NOTIFICATION_NEW_SUGGEST_SUBMIT_TITLE = "notification_new_suggest_submit_title";
     private static final String PARAMETER_NOTIFICATION_NEW_SUGGEST_SUBMIT_BODY = "notification_new_suggest_submit_body";
+    private static final String PARAMETER_ID_WORKFLOW = "id_workflow";
+    private static final String PARAMETER_ID_ACTION = "id_action";
+    private static final String PARAMETER_BACK = "back";
+    private static final String PARAMETER_SAVE = "save";
+
     // other constants
     private static final String EMPTY_STRING = "";
     private static final String JCAPTCHA_PLUGIN = "jcaptcha";
@@ -705,6 +726,33 @@ public class SuggestJspBean extends PluginAdminPageJspBean
             model.put( MARK_SUGGEST_SUBMIT_TYPE_SELECTED, getSearchFields( ).getIdType( ) );
         }
 
+        // Get the workflow state of the suggest items
+        if ( ( suggest.getIdWorkflow( ) > 0 ) && WorkflowService.getInstance( ).isAvailable( ) )
+        {
+            StateService stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
+            int nIdWorkflow = suggest.getIdWorkflow( );
+            // Retrieve the workflow data for each suggestion submitted
+            for ( SuggestSubmit submit : listSuggestSubmitDisplay )
+            {
+                // Get the state of the suggestion submitted
+                State stateSuggestSubmit = stateService.findByResource( submit.getIdSuggestSubmit( ), SuggestSubmit.RESOURCE_TYPE, nIdWorkflow );
+                if ( stateSuggestSubmit != null )
+                {
+                    // Set the State for this SuggestSubmit
+                    submit.setState( stateSuggestSubmit );
+                }
+                else
+                {
+                    // Set the State for this SuggestSubmit
+                    submit.setState( WorkflowService.getInstance( ).getState( submit.getIdSuggestSubmit( ), SuggestSubmit.RESOURCE_TYPE, nIdWorkflow,
+                            suggest.getIdSuggest( ) ) );
+                }
+                // Set the list of available workflow actions for this SuggestSubmit
+                submit.setListWorkflowActions( WorkflowService.getInstance( ).getActions( submit.getIdSuggestSubmit( ), SuggestSubmit.RESOURCE_TYPE,
+                        suggest.getIdWorkflow( ), (User) getUser( ) ) );
+            }
+        }
+
         model.put( MARK_PAGINATOR, paginator );
         model.put( MARK_NB_ITEMS_PER_PAGE, EMPTY_STRING + _nItemsPerPageSuggestSubmit );
         model.put( MARK_SUGGEST_SUBMIT_STATE_REF_LIST, refListSuggestSumitState );
@@ -935,7 +983,7 @@ public class SuggestJspBean extends PluginAdminPageJspBean
             suggestSubmit.setDisableComment( strDisableComment != null );
             suggestSubmit.setDisableVote( strDisableVote != null );
             suggestSubmit.setPinned( strEnablePin != null );
-            _suggestSubmitService.create( suggestSubmit, getPlugin( ), getLocale( ) );
+            _suggestSubmitService.create( suggestSubmit, getPlugin( ), getLocale( ), getUser( ) );
         }
 
         return getJspManageSuggestSubmit( request );
@@ -1138,7 +1186,7 @@ public class SuggestJspBean extends PluginAdminPageJspBean
             strUrlBack = getJspManageSuggestSubmit( request );
         }
 
-        _suggestSubmitService.remove( nIdSuggestSubmit, plugin );
+        _suggestSubmitService.remove( nIdSuggestSubmit, plugin, getUser( ) );
 
         return strUrlBack;
     }
@@ -1648,6 +1696,10 @@ public class SuggestJspBean extends PluginAdminPageJspBean
         int nNumberCommentDisplayInSuggestSubmitList = SuggestUtils.getIntegerParameter( strNumberCommentDisplayInSuggestSubmitList );
         int nNumberCharCommentDisplayInSuggestSubmitList = SuggestUtils.getIntegerParameter( strNumberCharCommentDisplayInSuggestSubmitList );
 
+        //Retrieve the selected workflow
+        String strIdWorkflow = request.getParameter( PARAMETER_ID_WORKFLOW );
+        int nIdWorkflow = SuggestUtils.getIntegerParameter( strIdWorkflow );
+
         String strFieldError = EMPTY_STRING;
 
         if ( StringUtils.isEmpty( strTitle ) )
@@ -1873,6 +1925,9 @@ public class SuggestJspBean extends PluginAdminPageJspBean
         suggest.setNotificationNewSuggestSubmitTitle( strNotificationNewSuggestSubmitTitle );
         suggest.setNotificationNewSuggestSubmitBody( strNotificationNewSuggestSubmitBody );
 
+        // Set the selected workflow ID for this Suggest
+        suggest.setIdWorkflow( nIdWorkflow );
+
         if ( ( suggest.getIdSuggest( ) == SuggestUtils.CONSTANT_ID_NULL ) || ( strUpdateFile != null ) )
         {
             FileItem imageSource = request.getFile( PARAMETER_IMAGE_SOURCE );
@@ -1933,6 +1988,13 @@ public class SuggestJspBean extends PluginAdminPageJspBean
         ReferenceList refVoteTypeList = initRefListVoteType( plugin, locale );
         DefaultMessage defaultMessage = DefaultMessageHome.find( plugin );
         Map<String, Object> model = new HashMap<>( );
+
+        // Get the list of available Workflows
+        if ( WorkflowService.getInstance( ).isAvailable( ) )
+        {
+            ReferenceList referenceList = WorkflowService.getInstance( ).getWorkflowsEnabled( (User) adminUser, getLocale( ) );
+            model.put( MARK_WORKFLOW_REF_LIST, referenceList );
+        }
         model.put( MARK_USER_WORKGROUP_REF_LIST, refListWorkGroups );
         model.put( MARK_MAILING_REF_LIST, refMailingList );
         model.put( MARK_DEFAULT_MESSAGE, defaultMessage );
@@ -2087,6 +2149,13 @@ public class SuggestJspBean extends PluginAdminPageJspBean
         }
 
         Map<String, Object> model = new HashMap<>( );
+
+        // Retrieve the list of available workflows
+        if ( WorkflowService.getInstance( ).isAvailable( ) )
+        {
+            ReferenceList referenceList = WorkflowService.getInstance( ).getWorkflowsEnabled( (User) adminUser, getLocale( ) );
+            model.put( MARK_WORKFLOW_REF_LIST, referenceList );
+        }
         model.put( MARK_PAGINATOR, paginator );
         model.put( MARK_NB_ITEMS_PER_PAGE, EMPTY_STRING + _nItemsPerPageEntry );
         model.put( MARK_USER_WORKGROUP_REF_LIST, refListWorkGroups );
@@ -2339,7 +2408,8 @@ public class SuggestJspBean extends PluginAdminPageJspBean
         if ( ( nIdSuggest != -1 )
                 && RBACService.isAuthorized( Suggest.RESOURCE_TYPE, EMPTY_STRING + nIdSuggest, SuggestResourceIdService.PERMISSION_DELETE, getUser( ) ) )
         {
-            SuggestHome.remove( nIdSuggest, plugin );
+            // Remove the specified Suggest
+            SuggestService.removeSuggest( nIdSuggest, getUser( ) );
         }
 
         return getJspManageSuggest( request );
@@ -3521,5 +3591,130 @@ public class SuggestJspBean extends PluginAdminPageJspBean
     private SuggestAdminSearchFields getSearchFields( )
     {
         return _searchFields;
+    }
+
+    /**
+     * Process a workflow's action (task)
+     * 
+     * @param request
+     *            The request
+     * @return the SuggestSubmit's management page if it is a simple task, or the form associated to the task (if it has any)
+     */
+    public String doProcessAction( HttpServletRequest request )
+    {
+        String strIdAction = request.getParameter( PARAMETER_ID_ACTION );
+        String strIdSuggestSubmit = request.getParameter( PARAMETER_ID_SUGGEST_SUBMIT );
+
+        if ( StringUtils.isNumeric( strIdAction ) && StringUtils.isNumeric( strIdSuggestSubmit ) )
+        {
+            int nIdAction = Integer.parseInt( strIdAction );
+            int nIdSuggestSubmit = Integer.parseInt( strIdSuggestSubmit );
+
+            SuggestSubmit submit = _suggestSubmitService.findByPrimaryKey( nIdSuggestSubmit, false, getPlugin( ) );
+
+            // Check if the workflow's task has to display a form to the user
+            if ( WorkflowService.getInstance( ).isDisplayTasksForm( nIdAction, getLocale( ) ) )
+            {
+                // Display the task's form
+                return getTaskFormJsp( request, nIdAction, nIdSuggestSubmit );
+            }
+            // Otherwise, just execute the task
+            WorkflowService.getInstance( ).doProcessAction( nIdSuggestSubmit, SuggestSubmit.RESOURCE_TYPE, nIdAction, submit.getSuggest( ).getIdSuggest( ),
+                    request, getLocale( ), false, getUser( ) );
+        }
+        return getJspManageSuggestSubmit( request );
+    }
+
+    /**
+     * Get the JSP used to display a workflow's task's form
+     * 
+     * @param request
+     *            The request
+     * @param nIdAction
+     *            The ID of the action being processed
+     * @param nIdSuggestSubmit
+     *            The ID of the SuggestSubmit being processed
+     * @return the page containing the task's form
+     */
+    public String getTaskFormJsp( HttpServletRequest request, int nIdAction, int nIdSuggestSubmit )
+    {
+        UrlItem url = new UrlItem( AppPathService.getBaseUrl( request ) + JSP_WORKFLOW_TASK_FORM );
+        url.addParameter( PARAMETER_ID_ACTION, nIdAction );
+        url.addParameter( PARAMETER_ID_SUGGEST_SUBMIT, nIdSuggestSubmit );
+
+        return url.getUrl( );
+    }
+
+    /**
+     * Get the form of the task being processed
+     * 
+     * @param request
+     *            The request
+     * @return the workflow's task's form if there's any, otherwise it returns to the SuggestSubmit's management page
+     */
+    public String getWorkflowTaskForm( HttpServletRequest request )
+    {
+        // Get the Parameters from the the request
+        int nIdSuggestSubmit = NumberUtils.toInt( request.getParameter( PARAMETER_ID_SUGGEST_SUBMIT ), NumberUtils.INTEGER_MINUS_ONE );
+        int nIdAction = NumberUtils.toInt( request.getParameter( PARAMETER_ID_ACTION ), NumberUtils.INTEGER_MINUS_ONE );
+
+        if ( nIdAction == NumberUtils.INTEGER_MINUS_ONE || nIdSuggestSubmit == NumberUtils.INTEGER_MINUS_ONE )
+        {
+            // If an error occurs, return to the main management page
+            AppLogService.error( "Can't get workflow task's form: action ID is {} & SuggestSubmit ID is {}", nIdAction, nIdSuggestSubmit );
+            return AdminMessageService.getMessageUrl( request, MESSAGE_ACTION_ERROR, getJspManageSuggestSubmit( request ), AdminMessage.TYPE_ERROR );
+        }
+
+        // Retrieve the form associated with this workflow's task
+        String strHtmlTaskForm = WorkflowService.getInstance( ).getDisplayTasksForm( nIdSuggestSubmit, SuggestSubmit.RESOURCE_TYPE, nIdAction, request,
+                getLocale( ), getUser( ) );
+
+        Map<String, Object> model = new HashMap<>( );
+        model.put( MARK_ID_SUGGEST_SUBMIT, nIdSuggestSubmit );
+        model.put( MARK_ID_ACTION, nIdAction );
+        model.put( MARK_TASK_FORM, strHtmlTaskForm );
+
+        setPageTitleProperty( PROPERTY_PAGE_TITLE_TASKS_FORM_WORKFLOW );
+
+        // Display the task's form
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_TASK_FORM, getLocale( ), model );
+        return getAdminPage( template.getHtml( ) );
+    }
+
+    /**
+     * Save the content of a workflow's task's form
+     * 
+     * @param request
+     *            The request
+     * @return the SuggestSubmit's management page
+     */
+    public String doSaveTaskForm( HttpServletRequest request )
+    {
+        int nIdSuggestSubmit = NumberUtils.toInt( request.getParameter( PARAMETER_ID_SUGGEST_SUBMIT ), NumberUtils.INTEGER_MINUS_ONE );
+        int nIdAction = NumberUtils.toInt( request.getParameter( PARAMETER_ID_ACTION ), NumberUtils.INTEGER_MINUS_ONE );
+
+        SuggestSubmit submit = _suggestSubmitService.findByPrimaryKey( nIdSuggestSubmit, false, getPlugin( ) );
+
+        if ( request.getParameter( PARAMETER_BACK ) == null )
+        {
+            // Save the content of the form
+            if ( WorkflowService.getInstance( ).isDisplayTasksForm( nIdAction, getLocale( ) ) && request.getParameter( PARAMETER_SAVE ) != null )
+            {
+                // With doSaveTasksForm(...), the content of the task's form is saved and then the task's action is executed
+                String strError = WorkflowService.getInstance( ).doSaveTasksForm( nIdSuggestSubmit, SuggestSubmit.RESOURCE_TYPE, nIdAction,
+                        submit.getSuggest( ).getIdSuggest( ), request, getLocale( ), getUser( ) );
+
+                // Check if the execution returned any error
+                if ( strError != null )
+                {
+                    // Redirect with an error message
+                    AppLogService.error( "Can't process Suggest workflow action: {}", strError );
+                    return AdminMessageService.getMessageUrl( request, MESSAGE_ACTION_ERROR, getJspManageSuggestSubmit( request ), AdminMessage.TYPE_ERROR );
+                }
+            }
+            return getJspManageSuggestSubmit( request );
+        }
+        // If the user cancels the task within the form
+        return getJspManageSuggestSubmit( request );
     }
 }

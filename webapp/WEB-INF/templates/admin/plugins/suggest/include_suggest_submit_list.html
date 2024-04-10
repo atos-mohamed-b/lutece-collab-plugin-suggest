@@ -2,10 +2,13 @@
 	<thead>
 		<@tr>
 			<@th></@th>
-			<@th>Cat&eacute;gorie</@th>
+			<@th>#i18n{suggest.manageSuggestSubmit.rowCategory}</@th>
 			<@th>Publication</@th>
 			<@th>Titre</@th>
-			<@th>Actions</@th>
+			<#if suggest.idWorkflow gt 0>
+				<@th>#i18n{suggest.manageSuggestSubmit.rowState}</@th>
+			</#if>
+			<@th>#i18n{suggest.manageSuggestSubmit.rowActions}</@th>
 		</@tr>
 	</thead>
 	<#list suggest_submit_list as suggest_submit>
@@ -79,6 +82,11 @@
 						</#if>
 					</#if>
 				</@p>
+			</@td>
+		</#if>
+		<#if suggest_submit.state??>
+			<@td>
+				${suggest_submit.state.name!}
 			</@td>
 		</#if>
 		<@td><#include "${include_suggest_submit_actions}"></@td>

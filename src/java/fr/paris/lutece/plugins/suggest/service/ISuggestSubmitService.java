@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.suggest.service;
 
 import fr.paris.lutece.plugins.suggest.business.Suggest;
 import fr.paris.lutece.plugins.suggest.business.SuggestSubmit;
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.suggest.business.IEntry;
 import fr.paris.lutece.plugins.suggest.business.SubmitFilter;
 import fr.paris.lutece.portal.business.style.Theme;
@@ -55,10 +56,12 @@ public interface ISuggestSubmitService
      *            The instance of the suggestSubmit which contains the informations to store
      * @param plugin
      *            the Plugin
+     * @param user
+     *            The user performing the remove action
      * @return the id of {@link Theme} suggestsubmit
      */
     @Transactional( "suggest.transactionManager" )
-    int create( SuggestSubmit suggestSubmit, Plugin plugin, Locale locale );
+    int create( SuggestSubmit suggestSubmit, Plugin plugin, Locale locale, User user );
 
     /**
      * Remove the record whose identifier is specified in parameter
@@ -70,6 +73,19 @@ public interface ISuggestSubmitService
      */
     @Transactional( "suggest.transactionManager" )
     void remove( int nIdSuggestSubmit, Plugin plugin );
+
+    /**
+     * Remove the record whose identifier is specified in parameter, as well as its related workflow resources
+     * 
+     * @param nIdSuggestSubmit
+     *            The id of the suggestSubmit
+     * @param plugin
+     *            The Plugin
+     * @param user
+     *            The user performing the remove action
+     */
+    @Transactional( "suggest.transactionManager" )
+    void remove( int nIdSuggestSubmit, Plugin plugin, User user );
 
     /**
      * Update of the suggestSubmit which is specified in parameter
@@ -170,6 +186,17 @@ public interface ISuggestSubmitService
      * @return the list of suggestSubmit
      */
     List<SuggestSubmit> getSuggestSubmitList( SubmitFilter filter, Plugin plugin, int nNumberMaxSuggestSubmit );
+
+    /**
+     * Get all the SuggestSubmit of a specific Suggest element
+     * 
+     * @param nIdSuggest
+     * The ID of the Suggest
+     * @param plugin
+     * The Plugin
+     * @return the List of SuggestSubmit associated to the specified Suggest
+     */
+    List<SuggestSubmit> getListSuggestSubmitBySuggestId( int nIdSuggest, Plugin plugin );
 
     /**
      * Load the number of all the suggestSubmit who verify the filter

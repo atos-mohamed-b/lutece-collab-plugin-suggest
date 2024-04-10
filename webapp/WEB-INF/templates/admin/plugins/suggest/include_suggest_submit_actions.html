@@ -11,4 +11,15 @@
 	<@aButton href='jsp/admin/plugins/suggest/DoChangeSuggestSubmitState.jsp?id_suggest_submit=${suggest_submit.idSuggestSubmit}&state_number=${disable_state_number}#suggest${suggest_submit.idSuggestSubmit}' title='#i18n{suggest.manageSuggestSubmit.altDisable}' hideTitle=['all'] buttonIcon='times' color='danger' size='sm' />
 	<@aButton href='jsp/admin/plugins/suggest/DoChangeSuggestSubmitState.jsp?id_suggest_submit=${suggest_submit.idSuggestSubmit}&state_number=${waiting_for_publish_state_number}#suggest${suggest_submit.idSuggestSubmit}' title='#i18n{suggest.manageSuggestSubmit.altWaitingForPublish}' hideTitle=['all'] buttonIcon='pause' color='warning' size='sm' />
 </#if>
+<#if suggest_submit.listWorkflowActions?? && suggest_submit.listWorkflowActions?size &gt; 0>
+	<#list suggest_submit.listWorkflowActions as action>
+		<@aButton href='jsp/admin/plugins/suggest/DoProcessWorkflowAction.jsp?id_action=${action.id}&id_suggest_submit=${suggest_submit.idSuggestSubmit}#suggest${suggest_submit.idSuggestSubmit}' size='sm'>
+			<img src='image?resource_type=workflow_icon_img&id=${action.icon.id}'
+				<#if action.icon.width!=-1> width="${action.icon.width}"</#if>
+				<#if action.icon.height!=-1> height="${action.icon.height}"</#if>
+				title="${action.name}"
+				alt="${action.name}" />
+		</@aButton>
+	</#list>
+</#if>
 <@aButton href='jsp/admin/plugins/suggest/ConfirmRemoveSuggestSubmit.jsp?id_suggest_submit=${suggest_submit.idSuggestSubmit}' title='#i18n{suggest.manageSuggestSubmit.altDelete}' hideTitle=['all'] buttonIcon='trash' color='danger' size='sm' />

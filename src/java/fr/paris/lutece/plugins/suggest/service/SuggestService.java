@@ -37,9 +37,13 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.suggest.business.Suggest;
 import fr.paris.lutece.plugins.suggest.business.SuggestFilter;
 import fr.paris.lutece.plugins.suggest.business.SuggestHome;
+import fr.paris.lutece.plugins.suggest.service.workflow.SuggestWorkflowService;
 import fr.paris.lutece.plugins.suggest.utils.SuggestUtils;
 import fr.paris.lutece.portal.business.style.Theme;
 import fr.paris.lutece.portal.service.plugin.PluginService;
@@ -123,4 +127,36 @@ public class SuggestService
         return nIdDefaultSuggest;
     }
 
+    /**
+     * Remove the specified Suggest and all its associated elements ( SuggestSubmit, workflow resources... )
+     * 
+     * @param nIdSuggest
+     *            The ID of the Suggest to remove
+     * @param user
+     *            The user
+     */
+    @Transactional( "suggest.transactionManager" )
+    public static void removeSuggest( int nIdSuggest, User user )
+    {
+        // Remove the Suggest's workflow related resources
+        removeSuggestWorkflowResources( nIdSuggest, user );
+        // Remove the Suggest and its content
+        SuggestHome.remove( nIdSuggest, PluginService.getPlugin( SuggestPlugin.PLUGIN_NAME ) );
+    }
+
+    /**
+     * Remove the workflow resources from a Suggest (consultation)
+     * 
+     * @param nIdSuggest
+     *            The Suggest's identifier
+     * @param user
+     *            The user
+     */
+    public static void removeSuggestWorkflowResources( int nIdSuggest, User user )
+    {
+        Suggest suggest = SuggestHome.findByPrimaryKey( nIdSuggest, PluginService.getPlugin( SuggestPlugin.PLUGIN_NAME ) );
+        int nIdWorkflow = suggest.getIdWorkflow( );
+        // Remove the workflow resources linked to the Suggest element
+        SuggestWorkflowService.removeResources( nIdWorkflow, nIdSuggest, user );
+    }
 }

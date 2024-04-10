@@ -44,6 +44,11 @@
 								<#else>
 									<#assign value = '' />
 								</#if>								<@input type='text' name='number_suggest_submit_caracters_shown' id='number_suggest_submit_caracters_shown' value=value maxlength=10 />							</@formGroup>
+							<#if workflow_list?has_content && workflow_list?size gt 1>
+								<@formGroup labelFor='id_workflow' labelKey='#i18n{suggest.createSuggest.workflow.label}' helpKey='#i18n{suggest.createSuggest.workflow.label.help}' rows=2>
+									<@select name='id_workflow' items=workflow_list default_value='${suggest.idWorkflow!}' />
+								</@formGroup>
+							</#if>
 							<@formGroup labelFor='id_vote_type' labelKey='#i18n{suggest.createSuggest.labelVoteType}' helpKey='#i18n{suggest.createSuggest.labelVoteTypeComment}'>
 								<#if suggest.voteType?exists>
 									<@select name='id_vote_type' items=vote_type_list default_value='suggest.voteType.idVoteType' />

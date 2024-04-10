@@ -75,6 +75,7 @@ import fr.paris.lutece.plugins.suggest.service.SuggestService;
 import fr.paris.lutece.plugins.suggest.service.ICommentSubmitService;
 import fr.paris.lutece.plugins.suggest.service.ISuggestSubmitService;
 import fr.paris.lutece.plugins.suggest.service.suggestsearch.SuggestSearchService;
+import fr.paris.lutece.plugins.suggest.service.workflow.SuggestWorkflowService;
 import fr.paris.lutece.plugins.suggest.service.subscription.SuggestSubscriptionProviderService;
 import fr.paris.lutece.plugins.suggest.utils.SuggestUtils;
 import fr.paris.lutece.portal.service.captcha.CaptchaSecurityService;
@@ -93,6 +94,7 @@ import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.service.workflow.WorkflowService;
 import fr.paris.lutece.portal.web.LocalVariables;
 import fr.paris.lutece.portal.web.xpages.XPage;
 import fr.paris.lutece.portal.web.xpages.XPageApplication;
@@ -735,6 +737,12 @@ public class SuggestApp implements XPageApplication
         }
 
         SuggestSubmit suggestSubmit = doInsertSuggestSubmit( request, nMode, _plugin, suggest, nIdCategory, nIdType, luteceUserConnected );
+
+        // Check if the suggest (consultation) has a workflow to execute upon the creation of a new SuggestSubmit element
+        if ( WorkflowService.getInstance( ).isAvailable( ) && suggest.getIdWorkflow( ) > 0 )
+        {
+            SuggestWorkflowService.processActionOnSuggestSubmitCreation( suggest, suggestSubmit, luteceUserConnected );
+        }
 
         if ( suggest.isDisableNewSuggestSubmit( ) )
         {
@@ -1699,7 +1707,7 @@ public class SuggestApp implements XPageApplication
 
         try
         {
-            _suggestSubmitService.create( suggestSubmit, plugin, locale );
+            _suggestSubmitService.create( suggestSubmit, plugin, locale, user );
         }
         catch( Exception ex )
         {
@@ -1708,7 +1716,7 @@ public class SuggestApp implements XPageApplication
             // revert
             // we clear the DB form the given formsubmit (FormSubmitHome also
             // removes the reponses)
-            _suggestSubmitService.remove( suggestSubmit.getIdSuggestSubmit( ), plugin );
+            _suggestSubmitService.remove( suggestSubmit.getIdSuggestSubmit( ), plugin, user );
             // throw a message to the user
             SiteMessageService.setMessage( request, MESSAGE_MESSAGE_SUBMIT_SAVE_ERROR, SiteMessage.TYPE_ERROR );
         }

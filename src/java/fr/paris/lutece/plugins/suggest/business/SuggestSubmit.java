@@ -34,11 +34,14 @@
 package fr.paris.lutece.plugins.suggest.business;
 
 import fr.paris.lutece.plugins.suggest.utils.SuggestUtils;
+import fr.paris.lutece.plugins.workflowcore.business.action.Action;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.portal.service.resource.IExtendableResource;
 import fr.paris.lutece.util.date.DateUtil;
 import fr.paris.lutece.util.xml.XmlUtil;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +93,16 @@ public class SuggestSubmit implements IExtendableResource
     private boolean _bPinned;
     private List<ReportedMessage> _listReportedMessages;
     private Integer _nIdImageResource;
+
+    /**
+     * List of the available workflow actions for the SuggestSubmit elements
+     */
+    private Collection<Action> _listWorkflowActions;
+
+    /**
+     * The state of the suggest submission
+     */
+    private State _state;
 
     /**
      * true if the suggest submit have been reported by people
@@ -689,5 +702,47 @@ public class SuggestSubmit implements IExtendableResource
     public void setIdImageResource( Integer nIdImageRessource )
     {
         this._nIdImageResource = nIdImageRessource;
+    }
+
+    /**
+     * Get the available workflow actions for this Object
+     * 
+     * @return the available actions
+     */
+    public Collection<Action> getListWorkflowActions( )
+    {
+        return _listWorkflowActions;
+    }
+
+    /**
+     * Set the available workflow actions for this Object
+     * 
+     * @param listWorkflowActions
+     * The list of workflow actions to associate this object with
+     */
+    public void setListWorkflowActions( Collection<Action> listWorkflowActions )
+    {
+        _listWorkflowActions = listWorkflowActions;
+    }
+
+    /**
+     * Get the workflow State of this SuggestSubmit Object
+     * 
+     * @return the state of this SuggestSubmit
+     */
+    public State getState( )
+    {
+        return _state;
+    }
+
+    /**
+     * Set the workflow State of this SuggestSubmit
+     * 
+     * @param state
+     *            the state to set for this SuggestSubmit
+     */
+    public void setState( State state )
+    {
+        _state = state;
     }
 }

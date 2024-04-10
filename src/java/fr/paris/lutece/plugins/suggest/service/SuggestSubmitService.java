@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.suggest.service;
 
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.suggest.business.CommentSubmit;
 import fr.paris.lutece.plugins.suggest.business.Suggest;
 import fr.paris.lutece.plugins.suggest.business.SuggestHome;
@@ -47,13 +48,16 @@ import fr.paris.lutece.plugins.suggest.business.Response;
 import fr.paris.lutece.plugins.suggest.business.ResponseHome;
 import fr.paris.lutece.plugins.suggest.business.SubmitFilter;
 import fr.paris.lutece.plugins.suggest.service.search.SuggestIndexer;
+import fr.paris.lutece.plugins.suggest.service.workflow.SuggestWorkflowService;
 import fr.paris.lutece.plugins.suggest.utils.SuggestIndexerUtils;
 import fr.paris.lutece.plugins.suggest.utils.SuggestUtils;
 import fr.paris.lutece.portal.business.indexeraction.IndexerAction;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.search.IndexationService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.service.workflow.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,7 +77,7 @@ public class SuggestSubmitService implements ISuggestSubmitService
      */
     @Override
     @Transactional( "suggest.transactionManager" )
-    public int create( SuggestSubmit suggestSubmit, Plugin plugin, Locale locale )
+    public int create( SuggestSubmit suggestSubmit, Plugin plugin, Locale locale, User user )
     {
         // update creation date
         suggestSubmit.setDateResponse( SuggestUtils.getCurrentDate( ) );
@@ -123,6 +127,9 @@ public class SuggestSubmitService implements ISuggestSubmitService
         suggestSubmit.setSuggestSubmitTitle( SuggestUtils.getSuggestSubmitTitle( suggestSubmit, locale ) );
         SuggestSubmitHome.update( suggestSubmit, plugin );
 
+        // Execute potential workflow tasks on a SuggestSubmit's creation
+        executeSuggestSubmitWorkflowAction( suggestSubmit, user );
+
         return nIdSuggestSubmit;
     }
 
@@ -148,7 +155,9 @@ public class SuggestSubmitService implements ISuggestSubmitService
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #remove(int, int, Plugin, User)}
      */
+    @Deprecated
     @Override
     @Transactional( "suggest.transactionManager" )
     public void remove( int nIdSuggestSubmit, Plugin plugin )
@@ -162,6 +171,27 @@ public class SuggestSubmitService implements ISuggestSubmitService
             SuggestSubmitHome.remove( nIdSuggestSubmit, plugin );
             // update suggest submit order
             updateSuggestSubmitOrder( null, null, nIdSuggest, suggestSubmit.isPinned( ), plugin );
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional( "suggest.transactionManager" )
+    public void remove( int nIdSuggestSubmit, Plugin plugin, User user )
+    {
+        SuggestSubmit suggestSubmit = SuggestSubmitHome.findByPrimaryKey( nIdSuggestSubmit, plugin );
+
+        if ( suggestSubmit != null )
+        {
+            int nIdSuggest = suggestSubmit.getSuggest( ).getIdSuggest( );
+            // Remove the specified SuggestSubmit element
+            SuggestSubmitHome.remove( nIdSuggestSubmit, plugin );
+            // Update the order of the remaining SuggestSubmit elements
+            updateSuggestSubmitOrder( null, null, nIdSuggest, suggestSubmit.isPinned( ), plugin );
+            // Remove related workflow resources
+            removeWorkflowResources( nIdSuggestSubmit );
         }
     }
 
@@ -477,5 +507,55 @@ public class SuggestSubmitService implements ISuggestSubmitService
         suggestSubmit.setSuggestSubmitTitle( SuggestUtils.getSuggestSubmitTitle( suggestSubmit, locale ) );
         // update SuggestSubmit
         update( suggestSubmit, plugin );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<SuggestSubmit> getListSuggestSubmitBySuggestId( int nIdSuggest, Plugin plugin )
+    {
+        SubmitFilter filter = new SubmitFilter( );
+        filter.setIdSuggest( nIdSuggest );
+
+        return getSuggestSubmitList( filter, plugin );
+    }
+
+    /**
+     * Execute automatic workflow actions for the given SuggestSubmit element
+     * 
+     * @param suggestSubmit
+     *            The SuggestSubmit element that will be checked for automatic actions
+     * @param user
+     *            The user
+     */
+    public void executeSuggestSubmitWorkflowAction( SuggestSubmit suggestSubmit, User user )
+    {
+        Suggest suggest = suggestSubmit.getSuggest( );
+        if ( WorkflowService.getInstance( ).isAvailable( ) && suggest.getIdWorkflow( ) != SuggestUtils.CONSTANT_ID_NULL )
+        {
+            SuggestWorkflowService.processActionOnSuggestSubmitCreation( suggest, suggestSubmit, user );
+        }
+    }
+
+    /**
+     * Remove Workflow resources for a specific SuggestSubmit element
+     * 
+     * @param nIdSuggestSubmit
+     *            The ID of the SuggestSubmit element to process
+     */
+    private void removeWorkflowResources( int nIdSuggestSubmit )
+    {
+        if ( WorkflowService.getInstance( ).isAvailable( ) )
+        {
+            try
+            {
+                WorkflowService.getInstance( ).doRemoveWorkFlowResource( nIdSuggestSubmit, SuggestSubmit.RESOURCE_TYPE );
+            }
+            catch( Exception e )
+            {
+                AppLogService.error( "Error when removing Workflow resources for SuggestSubmit element", e );
+            }
+        }
     }
 }

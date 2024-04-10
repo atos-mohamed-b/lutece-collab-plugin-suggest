@@ -15,6 +15,11 @@
 						<@formGroup labelFor='libelle_contribution' labelKey='#i18n{suggest.createSuggest.labelLibelleContribution}' helpKey='#i18n{suggest.createSuggest.labelLibelleContributionComment}' mandatory=true>							<@input type='text' name='libelle_contribution' id='libelle_contribution' value='${default_message.libelleContribution}' maxlength=255 />						</@formGroup>
 						<@formGroup labelFor='libelle_validate_button' labelKey='#i18n{suggest.createSuggest.labelLibelleValidateButton} *'>							<@input type='text' name='libelle_validate_button' id='libelle_validate_button' value='${default_message.libelleValidateButton}' maxlength=255 />						</@formGroup>
 						<@formGroup labelFor='number_suggest_submit_caracters_shown' labelKey='#i18n{suggest.createSuggest.labelNumberSuggestSubmitCaractersShown} *' helpKey='#i18n{suggest.createSuggest.labelNumberSuggestSubmitCaractersShownComment}' mandatory=CHECK>							<@input type='text' name='number_suggest_submit_caracters_shown' id='number_suggest_submit_caracters_shown' value='${default_message.numberSuggestSubmitCaractersShown}' maxlength=10 />						</@formGroup>
+						<#if workflow_list?has_content && workflow_list?size gt 1>
+							<@formGroup labelFor='id_workflow' labelKey='#i18n{suggest.createSuggest.workflow.label}' helpKey='#i18n{suggest.createSuggest.workflow.label.help}' rows=2>
+								<@select name='id_workflow' items=workflow_list default_value='' />
+							</@formGroup>
+						</#if>
 						<@formGroup labelFor='id_vote_type' labelKey='#i18n{suggest.createSuggest.labelVoteType}' helpKey='#i18n{suggest.createSuggest.labelVoteTypeComment}' mandatory=CHECK>							<@select name='id_vote_type' default_value='-1' items=vote_type_list />						</@formGroup>
 						<@formGroup helpKey='#i18n{suggest.createSuggest.labelDisableVoteComment}'>							<@checkBox labelFor='disable_vote' labelKey='#i18n{suggest.createSuggest.labelDisableVote}' name='disable_vote' id='disable_vote' value='disable_vote' />						</@formGroup>
 						<@formGroup helpKey='#i18n{suggest.createSuggest.labelAuthorizedCommentSubmitComment}'>							<@checkBox labelFor='authorized_comment' labelKey='#i18n{suggest.createSuggest.labelAuthorizedCommentSubmit}' id='authorized_comment' name='authorized_comment' params='onclick="displayAuthorizedComment()"' />						</@formGroup>
